@@ -1,0 +1,219 @@
+{% extends "core/base.html" %}
+{% block title %}Student{% endblock %}
+{% block header_title %}Student detail{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;">
+    <div>
+        <h1 style="margin:0;">{{ student.first_name }} {{ student.last_name }}</h1>
+        <div class="muted">{{ student.email }}{% if student.phone %} · {{ student.phone }}{% endif %}</div>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+        <a class="btn btn-ghost" href="{% url 'student_list' %}">← Terug</a>
+        <form method="post" action="{% url 'student_convert_to_employee' student.id %}">
+            {% csrf_token %}
+            <button class="btn btn-danger" type="submit">Zet om naar medewerker</button>
+        </form>
+    </div>
+</div>
+
+<div class="grid cols-2" style="grid-template-columns: 360px 1fr;">
+    <!-- LEFT: summary -->
+    <div class="card">
+        <h3 style="margin-top:0;">Overzicht</h3>
+
+        <div style="display:grid; gap:10px;">
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Status</div>
+                <div>{{ student.student_profile.get_status_display }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Locatie</div>
+                <div>{{ student.student_profile.location|default:"-" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Organisatie</div>
+                <div>{{ student.student_profile.organization|default:"-" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Baangarantie</div>
+                <div>{{ student.student_profile.job_guarantee|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Praktijkroute</div>
+                <div>{{ student.student_profile.praktijkroute|yesno:"Ja,Nee" }}</div>
+            </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border); margin:14px 0;">
+
+        <div class="muted" style="font-size:12px; font-weight:800;">Snelle acties</div>
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <a class="btn btn-ghost" href="/admin/core/student/{{ student.id }}/change/" target="_blank">Open in admin</a>
+        </div>
+    </div>
+
+    <!-- RIGHT: tabs -->
+    <div class="card">
+        <!-- Tabs bar -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <a class="btn btn-ghost" href="?tab=profile" style="{% if tab == 'profile' or not tab %}border-color: rgba(0,133,219,.35); background: rgba(0,133,219,.08);{% endif %}">Profiel</a>
+            <a class="btn btn-ghost" href="?tab=guidance" style="{% if tab == 'guidance' %}border-color: rgba(0,133,219,.35); background: rgba(0,133,219,.08);{% endif %}">Begeleiding & instanties</a>
+            <a class="btn btn-ghost" href="?tab=education" style="{% if tab == 'education' %}border-color: rgba(0,133,219,.35); background: rgba(0,133,219,.08);{% endif %}">Opleiding</a>
+            <a class="btn btn-ghost" href="?tab=contract" style="{% if tab == 'contract' %}border-color: rgba(0,133,219,.35); background: rgba(0,133,219,.08);{% endif %}">Contract</a>
+            <a class="btn btn-ghost" href="?tab=loonwaardejc" style="{% if tab == 'loonwaardejc' %}border-color: rgba(0,133,219,.35); background: rgba(0,133,219,.08);{% endif %}">Loonwaarde en Jobcoaching</a>
+            <a class="btn btn-ghost" href="?tab=signals" style="{% if tab == 'signals' %}border-color: rgba(0,133,219,.35); background: rgba(0,133,219,.08);{% endif %}">Meldingen ({{ student.signals.count }})</a>
+        </div>
+
+        {% if tab == 'guidance' %}
+        <h3 style="margin-top:0;">Begeleiding & instanties</h3>
+        <div class="grid cols-2">
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Organisatie</div>
+                <div>{{ student.student_profile.organization|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Begeleider / contactpersoon</div>
+                <div>{{ student.student_profile.contact_person|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Doelgroepregister</div>
+                <div>{{ student.student_profile.doelgroepregister|yesno:"Ja,Nee" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Praktijkroute</div>
+                <div>{{ student.student_profile.praktijkroute|yesno:"Ja,Nee" }}</div>
+            </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border); margin:14px 0;">
+        <div class="muted">Noodcontacten komen hier straks (aparte tabel/model).</div>
+
+        {% elif tab == 'education' %}
+        <h3 style="margin-top:0;">Opleiding</h3>
+        <div class="grid cols-2">
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Startdatum</div>
+                <div>{{ student.student_profile.start_date|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Einddatum</div>
+                <div>{{ student.student_profile.end_date|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Baangarantie</div>
+                <div>{{ student.student_profile.job_guarantee|yesno:"Ja,Nee" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Praktijkroute</div>
+                <div>{{ student.student_profile.praktijkroute|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="muted">Rooster komt hier straks (apart model/feature).</div>
+
+
+        {% elif tab == 'contract' %}
+        <h3 style="margin-top:0;">Contract</h3>
+        <div class="muted">
+            Hier komt later je contractdata (start/eind, functie, salaris) en daarna de functie om automatisch een contract te genereren.
+        </div>
+
+        {% elif tab == 'loonwaardejc' %}
+        <h3 style="margin-top:0;">Loonwaarde en Jobcoaching</h3>
+        <div class="muted">
+            Hier komt later informatie over loonwaarde, lks/lds en jobcoaching.
+        </div>
+        
+        {% elif tab == 'signals' %}
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;">
+            <h3 style="margin:0;">Meldingen</h3>
+            <a class="btn" href="{% url 'signal_create' student.id %}">+ Nieuwe melding</a>
+        </div>
+
+        <div class="muted" style="margin-bottom:10px;">
+            Meldingen die actief zijn vanaf een datum/tijd en toegewezen kunnen worden aan een gebruiker.
+        </div>
+
+
+        <div class="card" style="box-shadow:none; padding:0; border:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aangemaakt door</th>
+                        <th>Vanaf</th>
+                        <th>Onderdeel</th>
+                        <th>Titel</th>
+                        <th>Toegewezen aan</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in student.signals.all %}
+                    <tr>
+                        <td>{{ m.created_by|default:"-" }}</td>
+                        <td>{{ m.active_from|date:"d-m-Y H:i" }}</td>
+                        <td>{{ m.category.name }}</td>
+                        <td style="font-weight:800;">{{ m.title }}</td>
+                        <td>{{ m.assigned_to|default:"-" }}</td>
+                        <td>{{ m.get_status_display }}</td>
+                        <td>
+                            <button class="btn btn-ghost" type="button" onclick="openDialog('{{ m.id }}')">Open</button>
+                            {% include "core/partials/signal_dialog.html" with sig=m assignees=assignees %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="muted">Nog geen meldingen.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        {% else %}
+        <!-- default: profile -->
+        <h3 style="margin-top:0;">Profiel</h3>
+        <div class="grid cols-2">
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Email</div>
+                <div>{{ student.email|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Telefoon</div>
+                <div>{{ student.phone|default:"-" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Geboortedatum</div>
+                <div>{{ student.birth_date|date:"d-m-Y"|default:"-" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Adres</div>
+                <div>{{ student.address_line|default:"-" }}, {{ student.postal_code|default:"" }} {{ student.city|default:"" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">BSN</div>
+                <div>{{ student.bsn|default:"-" }}</div>
+            </div>
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">IBAN</div>
+                <div>{{ student.iban|default:"-" }}</div>
+            </div>
+
+            <div>
+                <div class="muted" style="font-size:12px; font-weight:800;">Opmerkingen</div>
+                <div>{{ student.notes|default:"-" }}</div>
+            </div>
+
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

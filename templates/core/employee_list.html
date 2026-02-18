@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% block title %}Medewerkers{% endblock %}
+{% block header_title %}Medewerkers{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:12px;">
+    <form method="get" class="grid cols-3">
+        <div>
+            <label>Zoek</label>
+            <input name="q" placeholder="Naam, email, telefoon" value="{{ q }}">
+        </div>
+        <div>
+            <label>Functietitel</label>
+            <input name="job_title" placeholder="Bijv. Trainer" value="{{ job_title }}">
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-end;">
+            <button class="btn" type="submit">Filter</button>
+            <a class="btn btn-ghost" href="{% url 'employee_list' %}">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Naam</th>
+                <th>Functie</th>
+                <th>In dienst</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in employees %}
+            <tr>
+                <td><a href="{% url 'employee_detail' e.id %}">{{ e.last_name }}, {{ e.first_name }}</a></td>
+                <td>{{ e.employee_profile.job_title|default:"-" }}</td>
+                <td>{{ e.employee_profile.hired_date|date:"d-m-Y"|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="muted">Geen medewerkers gevonden.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

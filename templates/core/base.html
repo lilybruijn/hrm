@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}HRM{% endblock %}</title>
+
+    <!-- Plus Jakarta Sans (zelfde vibe als Spike) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f6f8fc;
+            --panel: #ffffff;
+            --text: #1f2a37;
+            --muted: #ddd;
+            --border: #e6eaf2;
+            --primary: #0085db; /* Spike-achtige primary blauw */
+            --primary-weak: rgba(0,133,219,.10);
+            --radius: 14px;
+            --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+            --shadow-sm: 0 6px 18px rgba(15, 23, 42, .06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.6rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 800;
+            border: 1px solid var(--border);
+        }
+
+        .badge-student {
+            background: rgba(59,130,246,.08);
+            color: #2563eb;
+        }
+
+        .badge-employee {
+            background: rgba(168,85,247,.08);
+            color: #7c3aed;
+        }
+
+    a {
+    color: inherit;
+    text-decoration: none;
+    }
+
+    a:hover {
+    text-decoration: none;
+    }
+
+    .app {
+    display: flex;
+    min-height: 100vh;
+    }
+
+    th a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    }
+
+    th a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    }
+
+    .sort-icons {
+    display: inline-flex;
+    flex-direction: column;
+    font-size: 9px;
+    line-height: 9px;
+    }
+
+    .sort-icons .up,
+    .sort-icons .down {
+    opacity: .25;
+    transition: .2s;
+    }
+
+    .sort-icons .active {
+    opacity: 1;
+    }
+    .notif-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: #fff;
+    font-weight: 900;
+    border-radius: 999px;
+    font-size: 11px;
+    padding: 2px 6px;
+    }
+
+    .notif-dropdown {
+    width: 340px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.12);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    }
+
+    .notif-item {
+    display: block;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    }
+
+    .notif-item:hover {
+    background: #f8fafc;
+    }
+
+    .notif-title {
+    font-weight: 900;
+    font-size: 13px;
+    }
+
+    .notif-meta {
+    font-size: 11px;
+    color: var(--muted);
+    }
+
+    .notif-empty {
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    }
+
+    .notif-footer {
+    padding: 10px;
+    text-align: center;
+    background: #f9fafb;
+    font-weight: 900;
+    }
+
+    .sid-details {
+    }
+    .sig-details summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 240px;
+    }
+
+    .sig-details summary::-webkit-details-marker {
+    display: none;
+    }
+
+    .sig-body {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,.02);
+    width: 240px;
+    }
+
+
+
+    /* Sidebar */
+    .sidebar {
+    width: 280px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 18px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    }
+        .side details > summary {
+            cursor: pointer;
+            font-weight: 800;
+            padding: 8px 0;
+        }
+
+        .side a {
+            display: block;
+            padding: 6px 0;
+        }
+
+        .side details details {
+            padding-left: 14px;
+        }
+
+    .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    }
+
+    .brand-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--primary);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: 800;
+    box-shadow: var(--shadow-sm);
+    }
+
+    .sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin: 10px 12px 14px;
+    }
+
+    .nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px;
+    }
+
+    .nav a, details summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 12px;
+    color: #334155;
+    font-weight: 600;
+    }
+        details > a, details details summary {
+            margin-top: 5px;
+            margin-left: 15px;
+        }
+    
+    details details > a {
+        margin-left: 30px;
+    }
+        .nav a:hover {
+    background: #f3f6fb;
+    }
+        .nav details a.active {
+            background: var(--primary-weak);
+            color: var(--primary);
+            font-weight: 800;
+        }
+        .nav a.active, details[open] > summary {
+            background: var(--primary-weak);
+            color: var(--primary);
+        }
+
+    .nav small {
+    margin-left: auto;
+    color: var(--muted);
+    font-weight: 600;
+    }
+
+    /* Main */
+    .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    }
+
+    .topbar {
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    }
+
+    .topbar .title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    }
+
+    .topbar .right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 13px;
+    }
+
+    .pill {
+    padding: 8px 10px;
+    background: #f3f6fb;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: #334155;
+    }
+
+    .content {
+    padding: 22px;
+    }
+
+    .container {
+    max-width: 1180px;
+    margin: 0 auto;
+    }
+
+    /* Cards / grids */
+    .grid {
+    display: grid;
+    gap: 14px;
+    }
+
+    .grid.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+    }
+
+    .kpi .label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    }
+
+    .kpi .value {
+    font-size: 30px;
+    font-weight: 900;
+    margin-top: 6px;
+    }
+
+    /* Forms */
+    label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 6px;
+    }
+
+    input, select {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font: inherit;
+    outline: none;
+    }
+
+    input:focus, select:focus {
+    border-color: rgba(0,133,219,.45);
+    box-shadow: 0 0 0 4px rgba(0,133,219,.12);
+    }
+
+    .row-actions {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    }
+
+    /* Buttons */
+    .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,133,219,.25);
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    }
+
+        .btn.gray {
+            background: #d1d1d1;
+            color: #7f7f7f
+        }
+
+    .btn:hover {
+    filter: brightness(.98);
+    }
+
+    .btn-ghost {
+    background: #fff;
+    color: #0f172a;
+    border-color: var(--border);
+    box-shadow: none;
+    }
+
+    .btn-ghost:hover {
+    background: #f3f6fb;
+    }
+
+    .btn-danger {
+    background: #ef4444;
+    border-color: rgba(239,68,68,.25);
+    }
+
+    /* Tables */
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    }
+
+    th, td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+    }
+
+    th {
+    text-align: left;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    }
+
+    tr:hover td {
+    background: #f7faff;
+    }
+
+    .link {
+    color: var(--primary);
+    font-weight: 800;
+    }
+    th a { display:inline-flex; align-items:center; gap:8px; color:inherit; text-decoration:none; }
+    .sort-icons { display:inline-flex; flex-direction:column; font-size:9px; line-height:9px; }
+    .sort-icons .up, .sort-icons .down { opacity:.25; }
+    .sort-icons .active { opacity:1; }
+
+    /* Flash messages */
+    .flash {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+    }
+
+    .flash.success {
+    border-color: rgba(34,197,94,.25);
+    background: rgba(34,197,94,.08);
+    }
+
+    .flash.error {
+    border-color: rgba(239,68,68,.25);
+    background: rgba(239,68,68,.08);
+    }
+
+    @media (max-width: 980px) {
+    .sidebar {
+    display: none;
+    }
+
+    .grid.cols-3, .grid.cols-2 {
+    grid-template-columns: 1fr;
+    }
+    }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-badge">H</div>
+                <div>
+                    HRM
+                    <div style="font-size:12px; color: var(--muted); font-weight:700;">Admin / HR</div>
+                </div>
+            </div>
+
+            <div class="sub">Ingelogd als <b>{{ request.user.username }}</b></div>
+
+
+            <nav class="nav">
+                <a href="{% url 'dashboard' %}" class="{% if active_nav == 'dashboard' %}active{% endif %}">
+                    Dashboard
+                </a>
+                <a href="{% url 'signal_list' %}" class="{% if active_nav == 'signal_list' %}active{% endif %}">
+                    Meldingen
+                </a>
+
+                {% url 'student_list' as student_list_url %}
+                {% url 'employee_list' as employee_list_url %}
+
+
+
+
+                <details {% if active_nav == "people" or request.path == student_list_url or request.path == employee_list_url %}open{% endif %}>
+                    <summary>Personen</summary>
+                    <a href="{{ student_list_url }}" class="{% if request.path == student_list_url %}active{% endif %}">Studenten</a>
+                    <a href="{{ employee_list_url }}" class="{% if request.path == employee_list_url %}active{% endif %}">Medewerkers</a>
+                </details>
+                {% url 'organization_list' as organization_list_url %}
+                {% url 'contactperson_list' as contactperson_list_url %}
+                {% url 'benefittype_list' as benefittype_list_url %}
+                {% url 'location_list' as location_list_url %}
+                {% url 'workpackage_list' as workpackage_list_url %}
+
+                <details {% if active_nav == "admin" or request.path == organization_list_url or request.path == contactperson_list_url or request.path == benefittype_list_url or request.path == location_list_url %}open{% endif %}>
+                    <summary>Beheer</summary>
+
+                    <a href="{{ organization_list_url }}" class="{% if request.path == organization_list_url %}active{% endif %}">Organisaties</a>
+                    <a href="{{ contactperson_list_url }}" class="{% if request.path == contactperson_list_url %}active{% endif %}">Contactpersonen</a>
+                    <a href="{{ benefittype_list_url }}" class="{% if request.path == benefittype_list_url %}active{% endif %}">Uitkeringstypes</a>
+                    <a href="{{ location_list_url }}" class="{% if request.path == location_list_url %}active{% endif %}">Locaties</a>
+                    <a href="{{ workpackage_list_url }}" class="{% if request.path == workpackage_list_url %}active{% endif %}">Werkpakketten</a>
+                </details>
+
+
+                <a href="/admin/" target="_blank">
+                    Admin <small>↗</small>
+                </a>
+                <a href="/accounts/logout/">
+                    Uitloggen
+                </a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <div class="title">{% block header_title %}HRM{% endblock %}</div>
+                <div style="display:flex; ">
+                    <div style="display:flex; align-items:center;  gap:12px;">
+                        . <div style="font-weight:900;">
+                            {{ request.user.username }}
+                        </div>
+                        <div style="position:relative;">
+                            <button id="notifBtn" class="btn btn-ghost" style="position:relative;">
+                                🔔
+                                {% if unread_notifications_count %}
+                                <span class="notif-badge">
+                                    {{ unread_notifications_count }}
+                                </span>
+                                {% endif %}
+                            </button>
+
+                            <div id="notifContainer" style="display:none; position:absolute; right:0; top:42px; z-index:999;">
+                                <div id="notifContent"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <a class="btn btn-ghost" href="{% url 'logout' %}">Uitloggen</a>
+                        </div>
+                    </div>
+            </header>
+
+            <main class="content">
+                <div class="container">
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="flash {% if message.tags %}{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <script>const btn = document.getElementById("notifBtn");
+  const container = document.getElementById("notifContainer");
+  const content = document.getElementById("notifContent");
+
+  btn?.addEventListener("click", async () => {
+    if (container.style.display === "block") {
+      container.style.display = "none";
+      return;
+    }
+
+    const response = await fetch("{% url 'notification_dropdown' %}");
+    const html = await response.text();
+
+    content.innerHTML = html;
+    container.style.display = "block";
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!btn.contains(e.target) && !container.contains(e.target)) {
+      container.style.display = "none";
+    }
+});
+function openDialog(id) { document.getElementById('dlg-' + id).showModal(); }
+function closeDialog(id) { document.getElementById('dlg-' + id).close(); }
+(function () {
+    const openId = "{{ open_id }}";
+    if (openId) {
+        const dlg = document.getElementById("dlg-" + openId);
+        if (dlg) dlg.showModal();
+    }
+})();
+
+        function toggleAll(master) {
+            document.querySelectorAll('input[name="ids"]').forEach(cb => cb.checked = master.checked);
+        }
+
+
+    </script>
+</body>
+</html>

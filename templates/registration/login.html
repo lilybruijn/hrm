@@ -1,0 +1,33 @@
+{% extends "core/base_auth.html" %}
+{% block title %}Inloggen{% endblock %}
+
+{% block content %}
+<h1>Inloggen</h1>
+<div class="muted">Gebruik je HR/admin account om door te gaan.</div>
+
+  {% if form.errors %}
+<div class="error">
+    Je gebruikersnaam of wachtwoord klopt niet.
+</div>
+  {% endif %}
+
+  {% if next %}
+<div class="muted" style="margin-top:10px;">
+    Je moet inloggen om deze pagina te bekijken.
+</div>
+  {% endif %}
+
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+
+    <label for="id_username">Gebruikersnaam</label>
+    <input type="text" name="username" autofocus required id="id_username">
+
+    <label for="id_password">Wachtwoord</label>
+    <input type="password" name="password" required id="id_password">
+
+    <input type="hidden" name="next" value="{{ next }}">
+
+    <button class="btn" type="submit">Inloggen</button>
+</form>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:12px;">
+    <div>
+        <div style="font-weight:900; font-size:18px;">Locaties</div>
+        <div class="muted">Beheer locaties (Groningen, Amsterdam...)</div>
+    </div>
+
+    <a class="btn" href="{% url 'location_create' %}">Nieuwe locatie</a>
+</div>
+
+<form method="get" style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+    <input name="q" value="{{ q }}" placeholder="Zoek op naam..." style="width:320px;">
+    <button class="btn btn-ghost" type="submit">Zoeken</button>
+    {% if q %}<a class="btn btn-ghost" href="{% url 'location_list' %}">Reset</a>{% endif %}
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>
+                <a href="?{{ base_qs }}&sort=name&dir={% if sort == 'name' and dir == 'asc' %}desc{% else %}asc{% endif %}">Naam</a>
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for l in page_obj %}
+        <tr>
+            <td style="font-weight:800;">{{ l.name }}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <a class="btn btn-ghost" href="{% url 'location_edit' l.id %}">Bewerken</a>
+                <a class="btn btn-ghost" href="{% url 'location_delete' l.id %}">Verwijderen</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2" class="muted">Geen locaties gevonden.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+    <div class="muted">Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</div>
+    <div style="display:flex; gap:8px;">
+        {% if page_obj.has_previous %}
+        <a class="btn btn-ghost" href="?{{ base_qs }}&sort={{ sort }}&dir={{ dir }}&page={{ page_obj.previous_page_number }}">Vorige</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a class="btn btn-ghost" href="?{{ base_qs }}&sort={{ sort }}&dir={{ dir }}&page={{ page_obj.next_page_number }}">Volgende</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

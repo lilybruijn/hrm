@@ -1,0 +1,20 @@
+<div class="notif-dropdown">
+    {% if notifications %}
+    {% for n in notifications %}
+    <a href="{% url 'notification_list' %}?open={{ n.signal.id }}" class="notif-item">
+        <div class="notif-title">{{ n.signal.title }}</div>
+        <div class="notif-meta">
+            {{ n.signal.person.last_name }}, {{ n.signal.person.first_name }}
+            • {{ n.signal.category.name }}
+        </div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div class="notif-empty">Geen ongelezen meldingen</div>
+    {% endif %}
+
+    <div class="notif-footer">
+        <a href="{% url 'notification_list' %}">Bekijk alles</a>
+    </div>
+</div>
+

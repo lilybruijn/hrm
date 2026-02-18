@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Inloggen{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f6f8fc;
+            --panel: #ffffff;
+            --text: #1f2a37;
+            --muted: #6b7280;
+            --border: #e6eaf2;
+            --primary: #0085db;
+            --primary-weak: rgba(0,133,219,.10);
+            --radius: 14px;
+            --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+            --shadow-sm: 0 6px 18px rgba(15, 23, 42, .06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: 20px;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .brand-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--primary);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 900;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand-title {
+            font-weight: 900;
+            letter-spacing: .2px;
+        }
+
+        .brand-sub {
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            display: block;
+            margin: 14px 0 6px;
+        }
+
+        input {
+            width: 100%;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 11px 12px;
+            font: inherit;
+            outline: none;
+        }
+
+            input:focus {
+                border-color: rgba(0,133,219,.45);
+                box-shadow: 0 0 0 4px rgba(0,133,219,.12);
+            }
+
+        .btn {
+            width: 100%;
+            margin-top: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,133,219,.25);
+            background: var(--primary);
+            color: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .btn:hover {
+                filter: brightness(.98);
+            }
+
+        .error {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(239,68,68,.25);
+            background: rgba(239,68,68,.08);
+            color: #991b1b;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .footer {
+            margin-top: 12px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="brand">
+            <div class="brand-badge">H</div>
+            <div>
+                <div class="brand-title">HRM</div>
+                <div class="brand-sub">Admin / HR</div>
+            </div>
+        </div>
+
+        <div class="card">
+            {% block content %}{% endblock %}
+        </div>
+
+        <div class="footer">Alleen voor interne gebruikers</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+{% extends "core/base.html" %}
+{% block title %}Notificaties{% endblock %}
+{% block header_title %}Notificaties{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+    <div>
+        <h2 style="margin:0;">Mijn meldingen</h2>
+        <div class="muted">Alleen meldingen die aan jou zijn toegewezen.</div>
+    </div>
+
+    <form method="get" style="display:flex; gap:12px; align-items:center;">
+        <label style="display:flex; gap:8px; align-items:center; margin:0; font-weight:800;">
+            <input type="checkbox" name="show_future" value="1" {% if show_future %}checked{% endif %}>
+            Toon toekomstige
+        </label>
+        <label style="display:flex; gap:8px; align-items:center; margin:0; font-weight:800;">
+            <input type="checkbox" name="show_done" value="1" {% if show_done %}checked{% endif %}>
+            Toon afgeronde
+        </label>
+        <button class="btn btn-ghost" type="submit">Toepassen</button>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=active_from&dir={% if sort == 'active_from' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                        Vanaf
+                        <span class="sort-icons">
+                            <span class="up {% if sort == 'active_from' and dir == 'asc' %}active{% endif %}">▲</span>
+                            <span class="down {% if sort == 'active_from' and dir == 'desc' %}active{% endif %}">▼</span>
+                        </span>
+                    </a>
+                </th>
+
+                <th>
+                    <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=student&dir={% if sort == 'student' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                        Student
+                        <span class="sort-icons">
+                            <span class="up {% if sort == 'student' and dir == 'asc' %}active{% endif %}">▲</span>
+                            <span class="down {% if sort == 'student' and dir == 'desc' %}active{% endif %}">▼</span>
+                        </span>
+                    </a>
+                </th>
+
+                <th>
+                    <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=category&dir={% if sort == 'category' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                        Onderdeel
+                        <span class="sort-icons">
+                            <span class="up {% if sort == 'category' and dir == 'asc' %}active{% endif %}">▲</span>
+                            <span class="down {% if sort == 'category' and dir == 'desc' %}active{% endif %}">▼</span>
+                        </span>
+                    </a>
+                </th>
+
+                <th>
+                    <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=title&dir={% if sort == 'title' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                        Titel
+                        <span class="sort-icons">
+                            <span class="up {% if sort == 'title' and dir == 'asc' %}active{% endif %}">▲</span>
+                            <span class="down {% if sort == 'title' and dir == 'desc' %}active{% endif %}">▼</span>
+                        </span>
+                    </a>
+                </th>
+
+                <th>
+                    <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=status&dir={% if sort == 'status' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                        Status
+                        <span class="sort-icons">
+                            <span class="up {% if sort == 'status' and dir == 'asc' %}active{% endif %}">▲</span>
+                            <span class="down {% if sort == 'status' and dir == 'desc' %}active{% endif %}">▼</span>
+                        </span>
+                    </a>
+                </th>
+
+                <th>
+                    <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=created_by&dir={% if sort == 'created_by' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                        Aangemaakt door
+                        <span class="sort-icons">
+                            <span class="up {% if sort == 'created_by' and dir == 'asc' %}active{% endif %}">▲</span>
+                            <span class="down {% if sort == 'created_by' and dir == 'desc' %}active{% endif %}">▼</span>
+                        </span>
+                    </a>
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for m in signals %}
+            <tr onclick="openDialog('{{ m.id }}')"
+                style="cursor:pointer; {% if m.active_from < now and m.status != 'done' %}background: rgba(239,68,68,.06);{% endif %} {% if m.active_from > now %}opacity:.65;{% endif %}">
+                <td>{{ m.active_from|date:"d-m-Y H:i" }}</td>
+                <td>{{ m.person.last_name }}, {{ m.person.first_name }}</td>
+                <td>{{ m.category.name }}</td>
+                <td style="font-weight:900;">{{ m.title }}</td>
+                <td>{{ m.get_status_display }}</td>
+                <td>{{ m.created_by|default:"-" }}</td>
+            </tr>
+
+            {% include "core/partials/signal_dialog.html" with sig=m assignees=assignees %}
+
+
+            {% empty %}
+            <tr><td colspan="6" class="muted">Geen meldingen.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>  {# card #}
+
+
+
+
+{% endblock %}

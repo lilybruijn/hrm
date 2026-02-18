@@ -1,0 +1,257 @@
+{% extends "core/base.html" %}
+{% block title %}Meldingen{% endblock %}
+{% block header_title %}Meldingen{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+        <div>
+            <h2 style="margin:0;">Meldingen</h2>
+            <div class="muted">Overzicht van openstaande meldingen.</div>
+        </div>
+        <a class="btn" href="{% url 'signal_create_global' %}">+ Maak melding</a>
+    </div>
+   
+
+    <form method="get">
+
+        <label>Weergave</label>
+        <div style="display:flex; flex-direction:row;  margin-top:8px; margin-bottom: 8px;">
+            <label style="display:flex; flex: 1;  margin:0; color:var(--text); font-size: auto;">
+                <input style="flex: 1;" type="checkbox" name="show_future" value="1" {% if show_future %}checked{% endif %}>
+                <span style="flex: 29; margin-left: 5px;">Toon toekomstige meldingen</span>
+            </label>
+
+            <label style="display: flex; flex: 1; margin: 0;  color: var(--text); font-size: auto;">
+                <input style="flex: 1;" type="checkbox" name="show_done" value="1" {% if show_done %}checked{% endif %}>
+                <span style="flex: 29; margin-left: 5px;">Toon afgeronde meldingen</span>
+            </label>
+        </div>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+            <div>
+                <label>Zoek</label>
+                <input name="q" placeholder="Student, titel, tekst..." value="{{ q }}">
+            </div>
+            <div>
+                <label>Type</label>
+                <select name="person_type">
+                    <option value="">Alles</option>
+                    <option value="student" {% if person_type == "student" %}selected{% endif %}>Student</option>
+                    <option value="employee" {% if person_type == "employee" %}selected{% endif %}>Medewerker</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Status</label>
+                <select name="status">
+                    <option value="">Alles</option>
+                    <option value="open" {% if status == "open" %}selected{% endif %}>Open</option>
+                    <option value="done" {% if status == "done" %}selected{% endif %}>Afgerond</option>
+                    <option value="snoozed" {% if status == "snoozed" %}selected{% endif %}>Gepauzeerd</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Periode</label>
+                <select name="scope">
+                    <option value="">Alles</option>
+                    <option value="overdue" {% if scope == "overdue" %}selected{% endif %}>Overdue (verlopen)</option>
+                    <option value="today" {% if scope == "today" %}selected{% endif %}>Vandaag</option>
+                    <option value="week" {% if scope == "week" %}selected{% endif %}>Komende 7 dagen</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Onderdeel</label>
+                <select name="category">
+                    <option value="">Alles</option>
+                    {% for c in categories %}
+                    <option value="{{ c.key }}" {% if category_key == c.key %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Organisatie</label>
+                <select name="org">
+                    <option value="">Alles</option>
+                    {% for o in orgs %}
+                    <option value="{{ o.id }}" {% if org_id == o.id|stringformat:"s" %}selected{% endif %}>
+                        {{ o }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Toegewezen</label>
+                <select name="assigned">
+                    <option value="">Iedereen</option>
+
+                    <option value="me" {% if assigned == "me" %}selected{% endif %}>
+                        Alleen mij
+                    </option>
+
+                    {% for u in users %}
+                    <option value="{{ u.id }}" {% if assigned == u.id|stringformat:"s" %}selected{% endif %}>
+                        {{ u.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+
+
+            <div class="row-actions">
+                <button class="btn btn-sm" type="submit">Filter</button>
+                <a class="btn btn-ghost" href="{% url 'signal_list' %}">Reset</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <form method="post" style="margin-bottom:10px;">
+        {% csrf_token %}
+        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+
+        <div style="display:flex; gap:10px; align-items:center;">
+            <select name="action">
+                <option value="">Bulk actie…</option>
+                <option value="set_open">Status: Open</option>
+                <option value="set_snoozed">Status: Gepauzeerd</option>
+                <option value="set_done">Status: Afgerond</option>
+                {% if request.user.is_staff %}
+                <option value="delete">Verwijderen</option>{% endif %}
+            </select>
+            <button class="btn" type="submit">Toepassen</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="toggleAll(this)"></th>
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=active_from&dir={% if sort == 'active_from' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Vanaf
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'active_from' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'active_from' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=status&dir={% if sort == 'status' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Status
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'status' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'status' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=person&dir={% if sort == 'person' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Persoon
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'person' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'person' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=person_type&dir={% if sort == 'person_type' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Type
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'person_type' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'person_type' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=category&dir={% if sort == 'category' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Onderdeel
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'category' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'category' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=title&dir={% if sort == 'title' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Titel
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'title' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'title' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=assigned&dir={% if sort == 'assigned' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Toegewezen aan
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'assigned' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'assigned' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort=created_by&dir={% if sort == 'created_by' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Aangemaakt door
+                            <span class="sort-icons">
+                                <span class="up {% if sort == 'created_by' and dir == 'asc' %}active{% endif %}">▲</span>
+                                <span class="down {% if sort == 'created_by' and dir == 'desc' %}active{% endif %}">▼</span>
+                            </span>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in signals %}
+                <tr>
+                    <td><input type="checkbox" name="ids" value="{{ m.id }}"></td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.active_from|date:"d-m-Y H:i" }}</td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.get_status_display }}</td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.person.last_name }}, {{ m.person.first_name }}</td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">
+                        {% if m.person.person_type == "student" %}
+                        <span class="badge badge-student">Student</span>
+                        {% else %}
+                        <span class="badge badge-employee">Medewerker</span>
+                        {% endif %}
+                    </td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.category.name }}</td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.title }}</td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.assigned_to.username|default:"-" }}</td>
+                    <td onclick="openDialog('{{ m.id }}')" style="cursor:pointer;">{{ m.created_by.username|default:"-" }}</td>
+
+                </tr>
+
+                {% include "core/partials/signal_dialog.html" with sig=m assignees=assignees %}
+
+                {% empty %}
+                <tr><td colspan="7" class="muted">Geen meldingen gevonden.</td></tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <div class="muted">
+                Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}
+            </div>
+            <div style="display:flex; gap:8px;">
+                {% if page_obj.has_previous %}
+                <a class="btn btn-ghost" href="?{{ base_qs }}&sort={{ sort }}&dir={{ dir }}&page={{ page_obj.previous_page_number }}">Vorige</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a class="btn btn-ghost" href="?{{ base_qs }}&sort={{ sort }}&dir={{ dir }}&page={{ page_obj.next_page_number }}">Volgende</a>
+                {% endif %}
+            </div>
+        </div>
+
+</div>
+{% endblock %}

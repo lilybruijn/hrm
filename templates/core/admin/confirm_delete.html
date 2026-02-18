@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div style="max-width:760px;">
+    <div style="font-weight:900; font-size:18px; margin-bottom:6px;">{{ title }}</div>
+    <div class="muted" style="margin-bottom:12px;">
+        Weet je zeker dat je dit wilt verwijderen?
+    </div>
+
+    <div style="padding:12px; border:1px solid var(--border); border-radius:12px; margin-bottom:12px;">
+        <div style="font-weight:900;">{{ object }}</div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display:flex; gap:10px;">
+            <button class="btn" type="submit">Ja, verwijderen</button>
+            <a class="btn btn-ghost" href="javascript:history.back()">Annuleren</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

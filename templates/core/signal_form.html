@@ -1,0 +1,64 @@
+{% extends "core/base.html" %}
+{% block title %}Nieuwe melding{% endblock %}
+{% block header_title %}Nieuwe melding{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+    <div>
+        <h2>Nieuwe melding voor {{ person.last_name }}, {{ person.first_name }}</h2>
+
+    </div>
+</div>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="grid cols-2">
+            <div>
+                <label>{{ form.category.label }}</label>
+                {{ form.category }}
+                {% for e in form.category.errors %}<div class="muted" style="color:#991b1b;">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div>
+                <label>{{ form.active_from.label }}</label>
+                {{ form.active_from }}
+                {% for e in form.active_from.errors %}<div class="muted" style="color:#991b1b;">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label>{{ form.title.label }}</label>
+                {{ form.title }}
+                {% for e in form.title.errors %}<div class="muted" style="color:#991b1b;">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label>{{ form.body.label }}</label>
+                <textarea name="{{ form.body.name }}" rows="5" style="width:100%; border-radius:12px; border:1px solid var(--border); padding:11px 12px; font:inherit;">{{ form.body.value|default_if_none:"" }}</textarea>
+                {% for e in form.body.errors %}<div class="muted" style="color:#991b1b;">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div>
+                <label>{{ form.assigned_to.label }}</label>
+                {{ form.assigned_to }}
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px; margin-top: 18px;">
+                {{ form.notify }}
+                <label style="margin:0; font-size:13px; font-weight:800; color: var(--text);">Notificatie sturen</label>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+            <button class="btn" type="submit">Opslaan</button>
+            {% if person.person_type == "employee" %}
+            <a class="btn btn-ghost" href="{% url 'employee_detail' person.id %}">Terug</a>
+            {% else %}
+            <a class="btn btn-ghost" href="{% url 'student_detail' person.id %}">Terug</a>
+            {% endif %}
+
+        </div>
+    </form>
+</div>
+{% endblock %}

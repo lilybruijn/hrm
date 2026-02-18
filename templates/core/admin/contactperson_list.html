@@ -1,0 +1,67 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:12px;">
+    <div>
+        <div style="font-weight:900; font-size:18px;">Contactpersonen</div>
+        <div class="muted">Beheer contactpersonen per organisatie</div>
+    </div>
+
+    <a class="btn" href="{% url 'contactperson_create' %}">Nieuwe contactpersoon</a>
+</div>
+
+<form method="get" style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+    <input name="q" value="{{ q }}" placeholder="Zoek op naam / email / organisatie..." style="width:360px;">
+    <button class="btn btn-ghost" type="submit">Zoeken</button>
+    {% if q %}<a class="btn btn-ghost" href="{% url 'contactperson_list' %}">Reset</a>{% endif %}
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>
+                <a href="?{{ base_qs }}&sort=organization&dir={% if sort == 'organization' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                    Organisatie
+                </a>
+            </th>
+            <th>
+                <a href="?{{ base_qs }}&sort=name&dir={% if sort == 'name' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                    Naam
+                </a>
+            </th>
+            <th>Email</th>
+            <th>Telefoon</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in page_obj %}
+        <tr>
+            <td>{{ c.organization.name }}</td>
+            <td style="font-weight:800;">{{ c.name }}</td>
+            <td>{{ c.email|default:"-" }}</td>
+            <td>{{ c.phone|default:"-" }}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <a class="btn btn-ghost" href="{% url 'contactperson_edit' c.id %}">Bewerken</a>
+                <a class="btn btn-ghost" href="{% url 'contactperson_delete' c.id %}">Verwijderen</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="muted">Geen contactpersonen gevonden.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+    <div class="muted">Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</div>
+    <div style="display:flex; gap:8px;">
+        {% if page_obj.has_previous %}
+        <a class="btn btn-ghost" href="?{{ base_qs }}&sort={{ sort }}&dir={{ dir }}&page={{ page_obj.previous_page_number }}">Vorige</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a class="btn btn-ghost" href="?{{ base_qs }}&sort={{ sort }}&dir={{ dir }}&page={{ page_obj.next_page_number }}">Volgende</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

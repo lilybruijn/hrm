@@ -1,0 +1,135 @@
+{# usage: {% include "core/partials/signal_dialog.html" with sig=m assignees=assignees %} #}
+
+<dialog id="dlg-{{ sig.id }}" style="border:none; border-radius:14px; padding:0; width:min(760px, 92vw);">
+    <form method="post" action="{% url 'notification_quick_update' sig.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+
+        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:12px;">
+            <div style="flex:1;">
+                <div class="muted" style="margin-bottom:10px;">
+                    {{ sig.person.last_name }}, {{ sig.person.first_name }}
+                    • {{ sig.category.name }}
+                    • Vanaf {{ sig.active_from|date:"d-m-Y H:i" }}
+                </div>
+
+                <div class="grid" style="grid-template-columns: 1fr 240px; gap:12px; align-items:end;">
+                    <div>
+                        <label>Titel</label>
+                        <input name="title" value="{{ sig.title }}" style="width:100%;">
+                    </div>
+
+                    <div>
+                        <label>Toegewezen aan</label>
+                        <select name="assigned_to" style="width:100%;">
+                            {% for u in assignees %}
+                            <option value="{{ u.id }}" {% if sig.assigned_to_id == u.id %}selected{% endif %}>
+                                {{ u.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <label>Omschrijving</label>
+                    <textarea name="body" rows="5" style="width:100%;">{{ sig.body }}</textarea>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="padding:14px 16px;">
+            <div class="grid" style="grid-template-columns: 220px 1fr; gap:12px; align-items:start;">
+                <div>
+                    <label>Status</label>
+                    <select name="status" style="width:100%;">
+                        <option value="open" {% if sig.status == "open" %}selected{% endif %}>Open</option>
+                        <option value="snoozed" {% if sig.status == "snoozed" %}selected{% endif %}>Gepauzeerd</option>
+                        <option value="done" {% if sig.status == "done" %}selected{% endif %}>Afgerond</option>
+                    </select>
+
+                    <div style="margin-top:10px;">
+                        <label>Notitie toevoegen</label>
+                        <textarea name="note" rows="3" placeholder="Bijv. gebeld / mail gestuurd / vervolgactie..." style="width:100%; border-radius:12px; border:1px solid var(--border); padding:11px 12px; font:inherit;"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    {% if sig.notes.all %}
+                    <div style="margin-bottom:12px; padding:10px 12px; border:1px solid var(--border); border-radius:12px;">
+                        <div style="font-weight:900; margin-bottom:8px;">Notities</div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            {% for note in sig.notes.all|slice:":5" %}
+                            <div style="padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff;">
+                                <div style="font-weight:900; font-size:12px;">
+                                    {{ note.author|default:"-" }} • {{ note.created_at|date:"d-m-Y H:i" }}
+                                </div>
+                                <div style="white-space:pre-wrap;">{{ note.body }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a class="btn btn-ghost" href="{% url 'signal_notes' sig.id %}">
+                            Bekijk alle notities
+                        </a>
+
+                    </div>
+                    {% endif %}
+
+                    {% if sig.history.all %}
+                    <div style="padding:10px 12px; border:1px solid var(--border); border-radius:12px;">
+                        <div style="font-weight:900; margin-bottom:8px;">Geschiedenis</div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            {% for h in sig.history.all|slice:":8" %}
+                            <div class="muted" style="border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:#fff;">
+                                <div style="font-weight:900; font-size:12px;">
+                                    <div style="display:flex; justify-content:space-between; gap:12px;">
+                                        <div style="font-weight:900; font-size:12px;">
+                                            {{ h.created_at|date:"d-m-Y H:i" }} • {{ h.actor|default:"-" }}
+                                        </div>
+
+                                        <span style="
+                                            font-size:11px; font-weight:900;
+                                            padding:3px 8px; border-radius:999px;
+                                            border:1px solid var(--border);
+                                            {% if h.action == 'reassigned' %}background:rgba(59,130,246,.08);
+                                            {% elif h.action == 'updated' %}background:rgba(16,185,129,.08);
+                                            {% else %}background:rgba(100,116,139,.08);{% endif %}
+                                          ">
+                                            {{ h.action }}
+                                        </span>
+                                    </div>
+
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+                                    {% for field, pair in h.changes.items %}
+                                    <div style="display:flex; gap:10px; align-items:flex-start;">
+                                        <span style="font-weight:900; min-width:120px;">
+                                            {% if field == "assigned_to" %}Toegewezen aan{% elif field == "title" %}Titel{% elif field == "body" %}Omschrijving{% elif field == "status" %}Status{% else %}{{ field }}{% endif %}
+                                        </span>
+
+                                        <div class="muted" style="flex:1;">
+                                            <span style="text-decoration:line-through; opacity:.7;">{{ pair.0 }}</span>
+                                            <span style="opacity:.6;"> → </span>
+                                            <span style="font-weight:900; color:inherit;">{{ pair.1 }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+                <button class="btn btn-ghost" onclick="document.getElementById('dlg-{{ sig.id }}').close(); return false;">Sluiten</button>
+                <a class="btn btn-ghost" href="{% url 'student_detail' sig.person.id %}?tab=signals">Open student</a>
+                <button class="btn" type="submit">Opslaan</button>
+            </div>
+        </div>
+    </form>
+</dialog>

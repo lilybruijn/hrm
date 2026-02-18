@@ -1,0 +1,91 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block header_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="grid cols-3" style="margin-bottom:12px;">
+    <div class="card">
+        <div class="muted">Studenten</div>
+        <div style="font-size:28px; font-weight:900;">{{ total_students }}</div>
+    </div>
+    <div class="card">
+        <div class="muted">Medewerkers</div>
+        <div style="font-size:28px; font-weight:900;">{{ total_employees }}</div>
+    </div>
+    <div class="card">
+        <div class="muted">Overdue meldingen</div>
+        <div style="font-size:28px; font-weight:900;">{{ signals_overdue }}</div>
+    </div>
+</div>
+
+<div class="grid cols-2" style="gap:12px;">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight:900;">Studenten per status</div>
+            <div class="muted" style="font-weight:800;">totaal: {{ total_students }}</div>
+        </div>
+        <canvas id="chartStudents" height="120"></canvas>
+    </div>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight:900;">Meldingen</div>
+            <a class="btn btn-ghost" href="{% url 'signal_list' %}">Open meldingen</a>
+        </div>
+        <canvas id="chartSignals" style="max-height: 300px; max-width: 200px;"></canvas>
+
+        <div class="muted" style="margin-top:10px;">
+            Open: <strong>{{ signals_open }}</strong> • Afgerond: <strong>{{ signals_done }}</strong> • Verlopen: <strong>{{ signals_overdue }}</strong>
+        </div>
+    </div>
+</div>
+
+{{ student_status_labels|json_script:"studentStatusLabels" }}
+{{ student_status_values|json_script:"studentStatusValues" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const studentLabels = JSON.parse(document.getElementById("studentStatusLabels").textContent);
+  const studentValues = JSON.parse(document.getElementById("studentStatusValues").textContent);
+
+  // Studenten per status
+  new Chart(document.getElementById("chartStudents"), {
+    type: "bar",
+    data: {
+      labels: studentLabels,
+      datasets: [{
+        label: "Studenten",
+        data: studentValues,
+        borderWidth: 1,
+        borderRadius: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  // Meldingen open vs done
+  new Chart(document.getElementById("chartSignals"), {
+    type: "doughnut",
+    data: {
+      labels: ["Open", "Afgerond", "Verlopen"],
+      datasets: [{
+              data: [{{ signals_open }}, {{ signals_done }}, {{ signals_overdue }}],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "bottom" } },
+      cutout: "45%"
+    }
+  });
+</script>
+
+{% endblock %}

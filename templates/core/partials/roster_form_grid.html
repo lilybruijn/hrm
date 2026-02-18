@@ -1,0 +1,36 @@
+<div style="padding:14px 16px;">
+    <div class="grid" style="grid-template-columns: 180px 180px 220px; gap:10px; align-items:end;">
+        <div>
+            <label>Start</label>
+            <input type="date" name="start_date" value="{% if roster %}{{ roster.start_date|date:'Y-m-d' }}{% endif %}">
+        </div>
+        <div>
+            <label>Eind</label>
+            <input type="date" name="end_date" value="{% if roster %}{{ roster.end_date|date:'Y-m-d' }}{% endif %}">
+        </div>
+        <div>
+            <label>Cyclus start<br /> <small>(Laat leeg = gelijk aan startdatum.)</small></label>
+            <input type="date" name="cycle_start_date" value="{% if roster %}{{ roster.cycle_start_date|date:'Y-m-d' }}{% endif %}">
+        </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 90px repeat(7, 1fr); gap:10px; align-items:end; margin-top:14px;">
+        <div class="muted" style="font-weight:900; padding-top:22px;">Week A</div>
+        <div><label>Ma</label><input name="mon_a_hours" value="{% if roster %}{{ roster.mon_a_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Di</label><input name="tue_a_hours" value="{% if roster %}{{ roster.tue_a_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Wo</label><input name="wed_a_hours" value="{% if roster %}{{ roster.wed_a_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Do</label><input name="thu_a_hours" value="{% if roster %}{{ roster.thu_a_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Vr</label><input name="fri_a_hours" value="{% if roster %}{{ roster.fri_a_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Za</label><input name="sat_a_hours" value="{% if roster %}{{ roster.sat_a_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Zo</label><input name="sun_a_hours" value="{% if roster %}{{ roster.sun_a_hours }}{% else %}0{% endif %}"></div>
+
+        <div class="muted" style="font-weight:900; padding-top:22px;">Week B</div>
+        <div><label>Ma</label><input name="mon_b_hours" value="{% if roster %}{{ roster.mon_b_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Di</label><input name="tue_b_hours" value="{% if roster %}{{ roster.tue_b_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Wo</label><input name="wed_b_hours" value="{% if roster %}{{ roster.wed_b_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Do</label><input name="thu_b_hours" value="{% if roster %}{{ roster.thu_b_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Vr</label><input name="fri_b_hours" value="{% if roster %}{{ roster.fri_b_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Za</label><input name="sat_b_hours" value="{% if roster %}{{ roster.sat_b_hours }}{% else %}0{% endif %}"></div>
+        <div><label>Zo</label><input name="sun_b_hours" value="{% if roster %}{{ roster.sun_b_hours }}{% else %}0{% endif %}"></div>
+    </div>
+</div>

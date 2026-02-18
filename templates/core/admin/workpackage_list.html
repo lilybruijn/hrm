@@ -1,0 +1,58 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:12px;">
+    <div>
+        <div style="font-weight:900; font-size:18px;">Werkpakketten</div>
+        <div class="muted">Hoofd (1..4) + sub (1.1, 2.4...) met titel</div>
+    </div>
+    <a class="btn" href="{% url 'workpackage_create' %}">Nieuw werkpakket</a>
+</div>
+
+<form method="get" style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+    <input name="q" value="{{ q }}" placeholder="Zoek op code/titel..." style="width:340px;">
+    <button class="btn btn-ghost" type="submit">Zoeken</button>
+    {% if q %}<a class="btn btn-ghost" href="{% url 'workpackage_list' %}">Reset</a>{% endif %}
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Titel</th>
+            <th>Hoofd</th>
+            <th>Sort</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for w in page_obj %}
+        <tr>
+            <td style="font-weight:900;">{{ w.code }}</td>
+            <td>{{ w.title }}</td>
+            <td>{{ w.parent.code|default:"-" }}</td>
+            <td>{{ w.sort_order }}</td>
+            <td style="text-align:right; white-space:nowrap;">
+                <a class="btn btn-ghost" href="{% url 'workpackage_edit' w.id %}">Bewerken</a>
+                <a class="btn btn-ghost" href="{% url 'workpackage_delete' w.id %}">Verwijderen</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="muted">Nog geen werkpakketten.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+    <div class="muted">Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</div>
+    <div style="display:flex; gap:8px;">
+        {% if page_obj.has_previous %}
+        <a class="btn btn-ghost" href="?{{ base_qs }}&page={{ page_obj.previous_page_number }}">Vorige</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a class="btn btn-ghost" href="?{{ base_qs }}&page={{ page_obj.next_page_number }}">Volgende</a>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

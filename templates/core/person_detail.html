@@ -35,6 +35,364 @@
 </div>
 
 
+{# ========================= ROOSTER (ALTIJD ZICHTBAAR) ========================= #}
+
+<div class="card" style="margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+
+        <div class="card" style="margin-bottom:12px;">
+            <div style="font-weight: 900; margin-bottom: 12px; font-size: 16px;">
+                {{ month_start|date:"F Y" }}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+
+                <div style="display:flex; gap:10px;">
+                    <div class="badge">Werkbare dagen: {{ month_stats.workable_days }}</div>
+                    <div class="badge">Gepland: {{ month_stats.planned_hours_total }}</div>
+                    <div class="badge">Gewerkt: {{ month_stats.actual_hours_total }}</div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div style="display:flex; flex-flow: column-reverse nowrap;">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <a class="btn btn-ghost" href="?month={{ prev_month|date:'Y-m' }}&tab={{ tab }}">←</a>
+                <div style="font-weight:900;">{{ month_start|date:"F Y" }}</div>
+                <a class="btn btn-ghost" href="?month={{ next_month|date:'Y-m' }}&tab={{ tab }}">→</a>
+            </div>
+            <div>
+                <form method="get" style="display:flex; gap:10px; align-items:end; margin-bottom:12px;">
+                    <input type="hidden" name="tab" value="{{ tab }}">
+
+                    <div style="max-width:220px;">
+                        <label>Maand</label>
+                        <input type="month" name="month" value="{{ month_start|date:'Y-m' }}">
+                    </div>
+
+                    <div>
+                        <button class="btn" type="submit">Ga</button>
+                    </div>
+
+                    {% if open_id %}
+                    <input type="hidden" name="open" value="{{ open_id }}">
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+            <div class="muted" style="font-weight:900;">Roosters</div>
+
+            {% if rosters %}
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                {% for r in rosters %}
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <div class="badge" style="font-weight:900;">
+                        {{ r.start_date|date:"d-m-Y" }} → {{ r.end_date|date:"d-m-Y" }}
+                    </div>
+
+                    <button class="btn btn-ghost" type="button" onclick="openDialog('edit-roster-{{ r.id }}')">Bewerk</button>
+
+                    <form method="post" action="{% url 'roster_delete' person.id r.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+                        <button class="btn btn-ghost btn-danger" type="submit" onclick="return confirm('Rooster verwijderen?')">Verwijder</button>
+                    </form>
+                </div>
+
+                {# Edit dialog per rooster #}
+                <dialog id="dlg-edit-roster-{{ r.id }}" style="border:none; border-radius:14px; padding:0; width:min(980px, 92vw);">
+                    <form method="post" action="{% url 'roster_edit' person.id r.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+
+                        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
+                            <div style="font-weight:900;">Rooster bewerken</div>
+                            <div class="muted">Periode + Week A/Week B uren</div>
+                        </div>
+
+                        {% include "core/partials/roster_form_grid.html" with roster=r %}
+
+                        <div style="padding:14px 16px; display:flex; justify-content:flex-end; gap:10px;">
+                            <button class="btn btn-ghost" onclick="closeDialog('edit-roster-{{ r.id }}'); return false;">Sluiten</button>
+                            <button class="btn" type="submit">Opslaan</button>
+                        </div>
+                    </form>
+                </dialog>
+
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="muted">Nog geen roosters.</div>
+            {% endif %}
+        </div>
+
+        <div>
+            <button class="btn" type="button" onclick="openDialog('new-roster')">+ Nieuw rooster</button>
+        </div>
+    </div>
+
+
+
+    <div style="margin-top:14px;">
+        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; margin-bottom:8px;">
+            <div class="muted" style="font-weight:900;">Ma</div>
+            <div class="muted" style="font-weight:900;">Di</div>
+            <div class="muted" style="font-weight:900;">Wo</div>
+            <div class="muted" style="font-weight:900;">Do</div>
+            <div class="muted" style="font-weight:900;">Vr</div>
+            <div class="muted" style="font-weight:900;">Za</div>
+            <div class="muted" style="font-weight:900;">Zo</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px;">
+            {% for cell in cells %}
+            {% if cell == None %}
+            <div style="min-height:60px; border:1px dashed var(--border); border-radius:12px; opacity:.35;"></div>
+            {% else %}
+            <button type="button"
+                    class="btn btn-ghost {% if cell.actual == 0 %}gray{% endif %}"
+                    onclick="openDialog('roster-{{ cell.date|date:'Y-m-d' }}')"
+                    style="text-align: left; min-height: 60px; font-size: 11px; width: 100%; padding: 5px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                <div style="display:flex; flex-flow: column wrap; justify-content:center; width:100%; align-items:center;">
+                    <div style="font-weight:900;">{{ cell.day }}</div>
+                    <div class="muted"><b>Werkuren:</b> {{ cell.actual }}</div>
+                </div>
+
+                {% if cell.entries %}
+                <div style="font-weight: normal; margin-top: 5px; border-top: 1px solid #ccc; display: flex; flex-flow: column wrap; justify-content: center; align-items: center; gap: 6px; padding-top: 8px; ">
+
+
+
+                    {# ✅ details per subwerkpakket #}
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        {% for e in cell.entries %}
+                        <div>
+                            <small>Werkpakket {{ e.code }}: {{ e.hours }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </button>
+
+            <dialog id="dlg-roster-{{ cell.date|date:'Y-m-d' }}" style="border:none; border-radius:14px; padding:0; width:min(860px, 92vw);">
+                <form method="post" action="{% url 'roster_day_save' person.id cell.date|date:'Y-m-d' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+
+                    <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
+                        <div class="muted" style="font-weight:900;">{{ cell.date|date:"d-m-Y" }}</div>
+
+                        <div class="grid" style="grid-template-columns: 220px 1fr 1fr; gap:12px; align-items:end; margin-top:10px;">
+                            <div>
+                                <label>Status</label>
+                                <select name="status">
+                                    <option value="work" {% if cell.status == "work" %}selected{% endif %}>Werken</option>
+                                    <option value="sick" {% if cell.status == "sick" %}selected{% endif %}>Ziek</option>
+                                    <option value="vacation" {% if cell.status == "vacation" %}selected{% endif %}>Vakantie</option>
+                                    <option value="off" {% if cell.status == "off" %}selected{% endif %}>Vrij</option>
+                                    <option value="swapped" {% if cell.status == "swapped" %}selected{% endif %}>Geruild</option>
+                                    <option value="absent" {% if cell.status == "absent" %}selected{% endif %}>Ongeoorloofd afwezig</option>
+                                    <option value="other" {% if cell.status == "other" %}selected{% endif %}>Anders</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Gepland (uren)</label>
+                                <input name="planned_hours" value="{{ cell.planned }}">
+                            </div>
+                            <div>
+                                <label>Werkelijk (uren)</label>
+                                <input name="actual_hours" value="{{ cell.actual }}">
+                            </div>
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <label>Notitie</label>
+                            <textarea name="note" rows="3" style="width:100%;">{{ cell.note }}</textarea>
+                        </div>
+                    </div>
+
+                    <div style="padding:14px 16px;">
+                        <div style="font-weight:900; margin-bottom:8px;">Werkpakketten</div>
+
+                        {% for p in parents %}
+                        <div style="margin-bottom:12px; padding:10px 12px; border:1px solid var(--border); border-radius:12px;">
+                            <div style="font-weight:900; margin-bottom:8px;">{{ p.code }} — {{ p.title }}</div>
+
+                            <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap:10px;">
+                                {% with kids=children_by_parent|get_item:p.id %}
+                                {% if kids %}
+                                {% for c in kids %}
+                                <div>
+                                    <label style="display:flex; justify-content:space-between;">
+                                        <span>{{ c.code }}</span>
+                                        <span class="muted">{{ c.title }}</span>
+                                    </label>
+
+                                    <input name="wp_{{ c.id }}"
+                                           value="{% for e in cell.entries %}{% if e.wp_id == c.id %}{{ e.hours }}{% endif %}{% endfor %}">
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <div class="muted">Geen subpakketten onder dit hoofdwerkpakket.</div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+                            <button class="btn btn-ghost" onclick="closeDialog('roster-{{ cell.date|date:'Y-m-d' }}'); return false;">Sluiten</button>
+                            <button class="btn" type="submit">Opslaan</button>
+                        </div>
+                    </div>
+                </form>
+            </dialog>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+
+
+    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
+
+        <div style="font-weight:900; margin-bottom:8px;">
+            Maandtotaal werkpakketten: {{ month_grand_total }} uur
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;">
+
+            {% for parent_code, subs in month_totals_by_parent.items %}
+            <div style="border:1px solid var(--border); border-radius:10px; padding:10px;">
+
+                {# hoofdwerkpakket totaal #}
+                <div style="font-weight:900; margin-bottom:6px;">
+                    WP {{ parent_code }}: {{ month_parent_totals|get_item:parent_code }} uur
+                </div>
+
+                {# subwerkpakketten onder dit hoofdwerkpakket #}
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                    {% for sub in subs %}
+                    <div class="muted" style="font-size:12px;">
+                        WP {{ sub.code }}: {{ sub.total }} uur
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+
+</div>
+
+
+{# ========================= CREATE SIGNAL POPUP ========================= #}
+
+<dialog id="dlg-create-signal" style="border:none; border-radius:14px; padding:0; width:min(760px, 92vw);">
+    <form method="post" action="{% url 'signal_create' person.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+
+        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
+            <div class="muted" style="font-weight:900;">
+                Nieuwe melding — {{ person.last_name }}, {{ person.first_name }}
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1fr 240px; gap:12px; align-items:end; margin-top:10px;">
+                <div>
+                    <label>Titel</label>
+                    <input name="title" value="">
+                </div>
+
+                <div>
+                    <label>Onderdeel</label>
+                    <select name="category" style="width:100%;">
+                        {% for c in signal_categories %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 240px 1fr; gap:12px; align-items:end; margin-top:10px;">
+                <div>
+                    <label>Vanaf</label>
+                    <input type="datetime-local" name="active_from">
+                </div>
+
+                <div>
+                    <label>Toegewezen aan</label>
+                    <select name="assigned_to" style="width:100%;">
+                        <option value="">-</option>
+                        {% for u in assignees %}
+                        <option value="{{ u.id }}">{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top:10px;">
+                <label>Omschrijving</label>
+                <textarea name="body" rows="5" style="width:100%;"></textarea>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 240px 1fr; gap:12px; align-items:end; margin-top:10px;">
+                <div>
+                    <label>Status</label>
+                    <select name="status">
+                        <option value="open" selected>Open</option>
+                        <option value="snoozed">Gepauzeerd</option>
+                        <option value="done">Afgerond</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; padding-top:22px;">
+                    <input type="checkbox" name="notify" value="1" style="width:auto;">
+                    <div class="muted" style="font-weight:800;">Notificatie</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding:14px 16px; display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-ghost" onclick="closeDialog('create-signal'); return false;">Sluiten</button>
+            <button class="btn" type="submit">Opslaan</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="dlg-new-roster" style="border:none; border-radius:14px; padding:0; width:min(980px, 92vw);">
+    <form method="post" action="{% url 'roster_create' person.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+
+        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
+            <div style="font-weight:900;">Nieuw rooster</div>
+            <div class="muted">Maak een periode-rooster aan (mag een ander schema hebben dan vorige periodes)</div>
+        </div>
+
+        {% include "core/partials/roster_form_grid.html" with roster=None %}
+
+        <div style="padding:14px 16px; display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-ghost" onclick="closeDialog('new-roster'); return false;">Sluiten</button>
+            <button class="btn" type="submit">Aanmaken</button>
+        </div>
+    </form>
+</dialog>
+
+
+
 {# ========================= DETAILS (OUDE LAYOUT TERUG) ========================= #}
 
 <div class="grid cols-2" style="grid-template-columns: 360px 1fr; margin-top:16px;">
@@ -235,327 +593,6 @@
         {% endif %}
     </div>
 </div>
-
-{# ========================= ROOSTER (ALTIJD ZICHTBAAR) ========================= #}
-
-<div class="card" style="margin-top:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-        <div>
-            <div style="font-weight:900; font-size:16px;">Uren {{ month_start|date:"F Y" }} - {{ person.first_name }} {{ person.last_name }}</div>
-        </div>
-
-
-        <div style="display:flex; gap:10px; align-items:center;">
-            <a class="btn btn-ghost" href="?month={{ prev_month|date:'Y-m' }}&tab={{ tab }}">←</a>
-            <div style="font-weight:900;">{{ month_start|date:"F Y" }}</div>
-            <a class="btn btn-ghost" href="?month={{ next_month|date:'Y-m' }}&tab={{ tab }}">→</a>
-        </div>
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px;">
-        <div style="display:flex; flex-direction:column; gap:6px;">
-            <div class="muted" style="font-weight:900;">Roosters</div>
-
-            {% if rosters %}
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                {% for r in rosters %}
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                    <div class="badge" style="font-weight:900;">
-                        {{ r.start_date|date:"d-m-Y" }} → {{ r.end_date|date:"d-m-Y" }}
-                    </div>
-
-                    <button class="btn btn-ghost" type="button" onclick="openDialog('edit-roster-{{ r.id }}')">Bewerk</button>
-
-                    <form method="post" action="{% url 'roster_delete' person.id r.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
-                        <button class="btn btn-ghost btn-danger" type="submit" onclick="return confirm('Rooster verwijderen?')">Verwijder</button>
-                    </form>
-                </div>
-
-                {# Edit dialog per rooster #}
-                <dialog id="dlg-edit-roster-{{ r.id }}" style="border:none; border-radius:14px; padding:0; width:min(980px, 92vw);">
-                    <form method="post" action="{% url 'roster_edit' person.id r.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
-
-                        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
-                            <div style="font-weight:900;">Rooster bewerken</div>
-                            <div class="muted">Periode + Week A/Week B uren</div>
-                        </div>
-
-                        {% include "core/partials/roster_form_grid.html" with roster=r %}
-
-                        <div style="padding:14px 16px; display:flex; justify-content:flex-end; gap:10px;">
-                            <button class="btn btn-ghost" onclick="closeDialog('edit-roster-{{ r.id }}'); return false;">Sluiten</button>
-                            <button class="btn" type="submit">Opslaan</button>
-                        </div>
-                    </form>
-                </dialog>
-
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="muted">Nog geen roosters.</div>
-            {% endif %}
-        </div>
-
-        <div>
-            <button class="btn" type="button" onclick="openDialog('new-roster')">+ Nieuw rooster</button>
-        </div>
-    </div>
-
-
-
-    <div style="margin-top:14px;">
-        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; margin-bottom:8px;">
-            <div class="muted" style="font-weight:900;">Ma</div>
-            <div class="muted" style="font-weight:900;">Di</div>
-            <div class="muted" style="font-weight:900;">Wo</div>
-            <div class="muted" style="font-weight:900;">Do</div>
-            <div class="muted" style="font-weight:900;">Vr</div>
-            <div class="muted" style="font-weight:900;">Za</div>
-            <div class="muted" style="font-weight:900;">Zo</div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px;">
-            {% for cell in cells %}
-            {% if cell == None %}
-            <div style="min-height:60px; border:1px dashed var(--border); border-radius:12px; opacity:.35;"></div>
-            {% else %}
-            <button type="button"
-                    class="btn btn-ghost {% if cell.actual == 0 %}gray{% endif %}"
-                    onclick="openDialog('roster-{{ cell.date|date:'Y-m-d' }}')"
-                    style="text-align: left; min-height: 60px; font-size: 11px; width: 100%; padding: 5px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-                <div style="display:flex; flex-flow: column wrap; justify-content:center; width:100%; align-items:center;">
-                    <div style="font-weight:900;">{{ cell.day }}</div>
-                    <div class="muted"><b>Werkuren:</b> {{ cell.actual }}</div>
-                </div>
-
-                {% if cell.entries %}
-                <div style="font-weight: normal; margin-top: 5px; border-top: 1px solid #ccc; display: flex; flex-flow: column wrap; justify-content: center; align-items: center; gap: 6px; padding-top: 8px; ">
-
-                 
-
-                    {# ✅ details per subwerkpakket #}
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        {% for e in cell.entries %}
-                        <div>
-                            <small>Werkpakket {{ e.code }}: {{ e.hours }}</small>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </button>
-
-            <dialog id="dlg-roster-{{ cell.date|date:'Y-m-d' }}" style="border:none; border-radius:14px; padding:0; width:min(860px, 92vw);">
-                <form method="post" action="{% url 'roster_day_save' person.id cell.date|date:'Y-m-d' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
-
-                    <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
-                        <div class="muted" style="font-weight:900;">{{ cell.date|date:"d-m-Y" }}</div>
-
-                        <div class="grid" style="grid-template-columns: 220px 1fr 1fr; gap:12px; align-items:end; margin-top:10px;">
-                            <div>
-                                <label>Status</label>
-                                <select name="status">
-                                    <option value="work" {% if cell.status == "work" %}selected{% endif %}>Werken</option>
-                                    <option value="sick" {% if cell.status == "sick" %}selected{% endif %}>Ziek</option>
-                                    <option value="vacation" {% if cell.status == "vacation" %}selected{% endif %}>Vakantie</option>
-                                    <option value="off" {% if cell.status == "off" %}selected{% endif %}>Vrij</option>
-                                    <option value="swapped" {% if cell.status == "swapped" %}selected{% endif %}>Geruild</option>
-                                    <option value="absent" {% if cell.status == "absent" %}selected{% endif %}>Ongeoorloofd afwezig</option>
-                                    <option value="other" {% if cell.status == "other" %}selected{% endif %}>Anders</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Gepland (uren)</label>
-                                <input name="planned_hours" value="{{ cell.planned }}">
-                            </div>
-                            <div>
-                                <label>Werkelijk (uren)</label>
-                                <input name="actual_hours" value="{{ cell.actual }}">
-                            </div>
-                        </div>
-
-                        <div style="margin-top:10px;">
-                            <label>Notitie</label>
-                            <textarea name="note" rows="3" style="width:100%;">{{ cell.note }}</textarea>
-                        </div>
-                    </div>
-
-                    <div style="padding:14px 16px;">
-                        <div style="font-weight:900; margin-bottom:8px;">Werkpakketten</div>
-
-                        {% for p in parents %}
-                        <div style="margin-bottom:12px; padding:10px 12px; border:1px solid var(--border); border-radius:12px;">
-                            <div style="font-weight:900; margin-bottom:8px;">{{ p.code }} — {{ p.title }}</div>
-
-                            <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap:10px;">
-                                {% with kids=children_by_parent|get_item:p.id %}
-                                {% if kids %}
-                                {% for c in kids %}
-                                <div>
-                                    <label style="display:flex; justify-content:space-between;">
-                                        <span>{{ c.code }}</span>
-                                        <span class="muted">{{ c.title }}</span>
-                                    </label>
-
-                                    <input name="wp_{{ c.id }}"
-                                           value="{% for e in cell.entries %}{% if e.wp_id == c.id %}{{ e.hours }}{% endif %}{% endfor %}">
-                                </div>
-                                {% endfor %}
-                                {% else %}
-                                <div class="muted">Geen subpakketten onder dit hoofdwerkpakket.</div>
-                                {% endif %}
-                                {% endwith %}
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
-                            <button class="btn btn-ghost" onclick="closeDialog('roster-{{ cell.date|date:'Y-m-d' }}'); return false;">Sluiten</button>
-                            <button class="btn" type="submit">Opslaan</button>
-                        </div>
-                    </div>
-                </form>
-            </dialog>
-            {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-
-
-
-        <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
-
-            <div style="font-weight:900; margin-bottom:8px;">
-                Maandtotaal werkpakketten: {{ month_grand_total }} uur
-            </div>
-
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;">
-
-                {% for parent_code, subs in month_totals_by_parent.items %}
-                <div style="border:1px solid var(--border); border-radius:10px; padding:10px;">
-
-                    {# hoofdwerkpakket totaal #}
-                    <div style="font-weight:900; margin-bottom:6px;">
-                        WP {{ parent_code }}: {{ month_parent_totals|get_item:parent_code }} uur
-                    </div>
-
-                    {# subwerkpakketten onder dit hoofdwerkpakket #}
-                    <div style="display:flex; flex-direction:column; gap:3px;">
-                        {% for sub in subs %}
-                        <div class="muted" style="font-size:12px;">
-                            WP {{ sub.code }}: {{ sub.total }} uur 
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                </div>
-                {% endfor %}
-
-            </div>
-
-        </div>
-
-
-</div>
-
-
-{# ========================= CREATE SIGNAL POPUP ========================= #}
-
-<dialog id="dlg-create-signal" style="border:none; border-radius:14px; padding:0; width:min(760px, 92vw);">
-    <form method="post" action="{% url 'signal_create' person.id %}">
-        {% csrf_token %}
-        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
-
-        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
-            <div class="muted" style="font-weight:900;">
-                Nieuwe melding — {{ person.last_name }}, {{ person.first_name }}
-            </div>
-
-            <div class="grid" style="grid-template-columns: 1fr 240px; gap:12px; align-items:end; margin-top:10px;">
-                <div>
-                    <label>Titel</label>
-                    <input name="title" value="">
-                </div>
-
-                <div>
-                    <label>Onderdeel</label>
-                    <select name="category" style="width:100%;">
-                        {% for c in signal_categories %}
-                        <option value="{{ c.id }}">{{ c.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid" style="grid-template-columns: 240px 1fr; gap:12px; align-items:end; margin-top:10px;">
-                <div>
-                    <label>Vanaf</label>
-                    <input type="datetime-local" name="active_from">
-                </div>
-
-                <div>
-                    <label>Toegewezen aan</label>
-                    <select name="assigned_to" style="width:100%;">
-                        <option value="">-</option>
-                        {% for u in assignees %}
-                        <option value="{{ u.id }}">{{ u.username }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div style="margin-top:10px;">
-                <label>Omschrijving</label>
-                <textarea name="body" rows="5" style="width:100%;"></textarea>
-            </div>
-
-            <div class="grid" style="grid-template-columns: 240px 1fr; gap:12px; align-items:end; margin-top:10px;">
-                <div>
-                    <label>Status</label>
-                    <select name="status">
-                        <option value="open" selected>Open</option>
-                        <option value="snoozed">Gepauzeerd</option>
-                        <option value="done">Afgerond</option>
-                    </select>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:10px; padding-top:22px;">
-                    <input type="checkbox" name="notify" value="1" style="width:auto;">
-                    <div class="muted" style="font-weight:800;">Notificatie</div>
-                </div>
-            </div>
-        </div>
-
-        <div style="padding:14px 16px; display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn btn-ghost" onclick="closeDialog('create-signal'); return false;">Sluiten</button>
-            <button class="btn" type="submit">Opslaan</button>
-        </div>
-    </form>
-</dialog>
-
-<dialog id="dlg-new-roster" style="border:none; border-radius:14px; padding:0; width:min(980px, 92vw);">
-    <form method="post" action="{% url 'roster_create' person.id %}">
-        {% csrf_token %}
-        <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
-
-        <div style="padding:16px 16px 12px; border-bottom:1px solid var(--border);">
-            <div style="font-weight:900;">Nieuw rooster</div>
-            <div class="muted">Maak een periode-rooster aan (mag een ander schema hebben dan vorige periodes)</div>
-        </div>
-
-        {% include "core/partials/roster_form_grid.html" with roster=None %}
-
-        <div style="padding:14px 16px; display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn btn-ghost" onclick="closeDialog('new-roster'); return false;">Sluiten</button>
-            <button class="btn" type="submit">Aanmaken</button>
-        </div>
-    </form>
-</dialog>
 
 
 {% endblock %}

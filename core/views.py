@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.db.models import Q, Case, When, Value, IntegerField, Count
 from django.core.paginator import Paginator
 from django.urls import reverse
-
+from collections import defaultdict
 from .models import Person, EmployeeProfile, Location, Organization, Signal, SignalCategory, Notification, SignalNote, StudentProfile, Location, ContactPerson, BenefitType, WorkPackage, Person, Roster, RosterDay, RosterDayWork
 from .forms import SignalForm, SignalCreateFromListForm, SignalHistory, StudentCreateForm, EmployeeCreateForm, LocationForm, ContactPersonForm, OrganizationForm, BenefitTypeForm, WorkPackageForm
 from django.contrib.auth import get_user_model
@@ -142,6 +142,40 @@ def person_list(request):
         "base_qs": base_qs,
         "active_nav": "people",
     })
+
+def _month_work_stats(cells):
+    """
+    cells = jouw calendar grid items (dicts) + None's.
+    We tellen alleen echte dagen (dict) mee.
+
+    Werkbare dag = status == "work" én planned > 0
+    (Je kunt dit aanpassen als je ook 'swapped' wilt meetellen.)
+    """
+    stats = {
+        "workable_days": 0,
+        "planned_hours_total": Decimal("0"),
+        "actual_hours_total": Decimal("0"),
+        "status_counts": defaultdict(int),
+    }
+
+    for cell in cells:
+        if not cell:
+            continue
+
+        status = cell.get("status") or "work"
+        planned = cell.get("planned") or Decimal("0")
+        actual = cell.get("actual") or Decimal("0")
+
+        stats["status_counts"][status] += 1
+        stats["planned_hours_total"] += planned
+        stats["actual_hours_total"] += actual
+
+        if status == "work" and planned > 0:
+            stats["workable_days"] += 1
+
+    # maak status_counts JSON/template vriendelijk
+    stats["status_counts"] = dict(stats["status_counts"])
+    return stats
 
 @staff_required
 def person_detail(request, person_id):
@@ -334,6 +368,8 @@ def person_detail(request, person_id):
         )
    
 
+    month_stats = _month_work_stats(cells)
+
     return render(request, "core/person_detail.html", {
         "person": person,
         "month_start": month_start,
@@ -353,7 +389,8 @@ def person_detail(request, person_id):
         "month_totals": dict(sorted(month_totals.items())),
         "month_parent_totals": dict(sorted(month_parent_totals.items())),
         "month_totals_by_parent": month_totals_by_parent,
-         "month_grand_total": month_grand_total
+         "month_grand_total": month_grand_total,
+         "month_stats": month_stats
     })
 
 
